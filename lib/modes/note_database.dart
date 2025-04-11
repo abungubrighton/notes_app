@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'note.dart';
 
 // Holds functionality to interact with the database
-class NoteDatabase {
+class NoteDatabase extends ChangeNotifier{
   // INITIALIZE - DATABASE
   static late Isar isar; // DEFINE THE ISAR OBJECT
   // this is the object that will be used to interact with the database
@@ -29,7 +30,7 @@ class NoteDatabase {
     });
 
     // retrieve the notes from the database
-    fetchNotes();
+    await fetchNotes(); // also notify listeners to update the UI
   }
 
   // R E A D - get all notes from db
@@ -37,6 +38,8 @@ class NoteDatabase {
     List<Note> fetchedNotes = await isar.notes.where().findAll();
     currentNotes.clear();
     currentNotes.addAll(fetchedNotes);
+    // notify listeners to update the UI
+    notifyListeners();
   }
 
   // U P D A T E - update a note in db
@@ -45,7 +48,7 @@ class NoteDatabase {
     if (existingNote != null) {
       existingNote.text = newText;
       await isar.writeTxn(() => isar.notes.put(existingNote));
-      await fetchNotes();
+      await fetchNotes(); // also notify listeners to update the UI
     }
   }
 
@@ -53,7 +56,7 @@ class NoteDatabase {
   Future<void> deleteNote(Id id) async {
     await isar.writeTxn(() async {
       await isar.notes.delete(id);
-      await fetchNotes();
+      await fetchNotes(); // also notify listeners to update the UI
     });
   }
 }
